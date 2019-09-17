@@ -54,8 +54,8 @@ function void runBass() {
 }
 
 tempo.note * 4 => now;
-spork ~ runBass();
-tempo.note * 28 => now;
 
-while(true)
-    1 :: second => now;
+spork ~ runBass() @=> Shred bassShred;
+tempo.note * 60 => now;
+
+Machine.remove(bassShred.id());

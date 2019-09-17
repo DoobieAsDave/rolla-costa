@@ -7,4 +7,5 @@ tempo.setBPM(85.0);
 
 Machine.add(me.dir() + "drums/drum_machine.ck") => int drums;
 Machine.add(me.dir() + "units/arp.ck") => int arp;
+Machine.add(me.dir() + "units/lead.ck") => int lead;
 Machine.add(me.dir() + "units/bass.ck") => int bass;

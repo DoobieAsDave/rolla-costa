@@ -12,6 +12,10 @@ SndBuf wood => JCRev woodRev => master;
 
 master => dac;
 
+Shred kickShred, snareShred, hihatShred, lowhatShred, openhatShred, shakerShred, woodShred;
+
+///
+
 me.dir(-1) + "audio/kick.wav" => kick.read;
 me.dir(-1) + "audio/snare.wav" => snare.read;
 me.dir(-1) + "audio/hihat.wav" => hihat.read;
@@ -28,6 +32,8 @@ openhat.samples() => openhat.pos;
 shaker.samples() => shaker.pos;
 wood.samples() => wood.pos;
 
+1.2 => openhat.rate;
+
 //.15 => snareRev.mix;
 .0 => snareRev.mix;
 .05 => woodRev.mix;
@@ -40,7 +46,7 @@ wood.samples() => wood.pos;
 
 .8 => master.gain;
 
-tempo.sixteenthNote => dur duration;
+///
 
 [
     1, 0, 0 ,0, 
@@ -67,11 +73,13 @@ tempo.sixteenthNote => dur duration;
     1, 1, 1, 0
 ] @=> int lowhatPattern[];
 [
-    0, 0, 1, 0,
-    0, 0, 1, 0,
-    0, 0, 1, 0,
-    0, 0, 1, 0
+    0, 0, 0, 1,
+    0, 0, 0, 0,
+    0, 0, 0, 1,
+    0, 0, 0, 0
 ] @=> int openhatPattern[];
+
+tempo.sixteenthNote => dur duration;
 
 /// Functions
 
@@ -147,19 +155,18 @@ function void runLowhat() {
 }
 function void runOpenhat() {
     while(true) {
-        for (0 => int step; step < openhatPattern.cap(); step++) {
-            if (openhatPattern[step]) {
-                if (step != 14) {
-                    1 => openhat.rate;
+        for (0 => int beat; beat < 4; beat++) {
+            for (0 => int step; step < openhatPattern.cap(); step++) {
+                if (openhatPattern[step]) {                
+                    100 => openhat.pos;
                 }
-                else {
-                    Math.random2f(.9, 1.1) => openhat.rate;  
+
+                if (beat % 2 == 1 && step == 13 && Math.random2(0, 1)) {
+                    10 => openhat.pos;
                 }
                 
-                0 => openhat.pos;
+                duration => now;
             }
-            
-            duration => now;
         }
     }
 }
@@ -221,18 +228,47 @@ function void runWood() {
     }
 }
 
-spork ~ runKick();
-spork ~ runHihat();
+spork ~ runKick() @=> kickShred;
+spork ~ runHihat() @=> hihatShred;
 tempo.note * 4 => now;
-spork ~ runWood();
-tempo.note * 8 => now;
-spork ~ runSnare();
-tempo.note * 8 => now;
-spork ~ runShaker();
-tempo.note * 4 => now;
-spork ~ runLowhat();
-tempo.note * 4 => now;
-spork ~ runOpenhat();
+spork ~ runWood() @=> woodShred;
+tempo.note * 4 => now;                              // 8
+spork ~ runSnare() @=> snareShred;
+tempo.note * 16 => now;                             // 16
 
-while(true)
-    1 :: second => now;
+Machine.remove(woodShred.id());
+tempo.note * 4 => now;                              // 4
+
+spork ~ runShaker() @=> shakerShred;
+spork ~ runWood() @=> woodShred;
+tempo.note * 16 => now;                             // 16
+
+Machine.remove(shakerShred.id());
+Machine.remove(woodShred.id());
+tempo.note * 4 => now;                              // 4
+
+spork ~ runLowhat() @=> lowhatShred;
+tempo.note * 16 => now;                             // 16 = 64 bars
+
+spork ~ runShaker() @=> shakerShred;                
+spork ~ runOpenhat() @=> openhatShred;
+tempo.note * 16 => now;                             // 16
+
+Machine.remove(shakerShred.id());
+Machine.remove(openhatShred.id());
+
+tempo.note * 4 => now;                              // 4
+
+Machine.remove(lowhatShred.id());
+
+tempo.note * 4 => now;                              // 4
+
+Machine.remove(hihatShred.id());
+
+tempo.note * 4 => now;                              // 4
+
+Machine.remove(kickShred.id());
+
+tempo.note => now;                                  // 1
+
+Machine.remove(snareShred.id());                    // = 93 bars

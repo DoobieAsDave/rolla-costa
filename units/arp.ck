@@ -40,10 +40,10 @@ function void swipeEchoMix(Echo delay, dur t, float min, float max, float step) 
         echoMix + crement => echoMix;
 
         if (echoMix >= max) {
-            -.1 => crement;
+            step * -1 => crement;
         }
         else if (echoMix <= min) {
-            .1 => crement;
+            step => crement;
         }        
 
         t / stepNumber => now;
@@ -62,10 +62,10 @@ function void panStereo(Pan2 pan, dur t, float min, float max, float step) {
         stereoPan + crement => stereoPan;
 
         if (stereoPan >= max) {
-            -.1 => crement;
+            step * -1 => crement;
         }
         else if (stereoPan <= min) {
-            .1 => crement;
+            step => crement;
         }
 
         t / stepNumber => now;
@@ -100,12 +100,18 @@ function void runArp() {
 }
 
 spork ~ swipeEchoMix(echo, tempo.note, .1, .5, .05);
-spork ~ panStereo(stereo, tempo.note, -.5, .5, .1);
+spork ~ panStereo(stereo, tempo.note, -.9, .7, .1);
 
 
-tempo.note * 12 => now;
-spork ~ runArp();
-tempo.note * 16 => now;
+tempo.note * 8 => now;
 
-while(true)
-    1 :: second => now;
+spork ~ runArp() @=> Shred arpShred;
+tempo.note * 40 => now;
+
+Machine.remove(arpShred.id());
+tempo.note * 4 => now;
+
+spork ~ runArp() @=> arpShred;
+tempo.note * 36 => now;
+
+Machine.remove(arpShred.id());
